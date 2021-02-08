@@ -1,6 +1,3 @@
-import numpy as np
-
-
 class Table:
     """
     This class represents a sudoku table
@@ -228,11 +225,35 @@ def read_input():
     colorCount, dim = input().split(" ")
     colors = input().split(" ")
     
+    if str(colorCount) != len(colors):
+        print("Enter the input right!")
+        return
+
     table = [[] for x in range(int(dim))]
     for i in range(int(dim)):
         table[i] = input().split(" ")
 
     return colors, table
+
+"""
+This solves a specific problem
+which is the result of an intercourse between sudoku and map-coloring problem
+
+Input format:
+<number of colors> <dimension of table>
+<colors; one letter seperated by space>
+<table; cells seperated by space, rows seperated by newline>
+each cell has 2 letters, the first is a number and the second is a color
+use * for empty numbers and # for empty colors
+WARNING: don't fuck up with input formatting, we don't test that here
+
+Sample input:
+5 3
+r g b y p
+1# *b *#
+*# 3r *#
+*g 1# *#
+"""
 
 # Read inputs
 colors, tableList = read_input()
