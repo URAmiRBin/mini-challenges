@@ -92,6 +92,7 @@ class Table:
                         
 
     def isValid(self, x, y, cell):
+        # print("Checking validity of ", cell.display(), " in ", x, " ", y)
         for i in range(self.size):
             if i == x:
                 continue
@@ -108,7 +109,15 @@ class Table:
             if cell.color == self.content[n[0]][n[1]].color:
                 return False
             
-            
+            if self.content[n[0]][n[1]].isFilled():
+                if self.colors.index(cell.color) < self.colors.index(self.content[n[0]][n[1]].color):
+                    if cell.number < self.content[n[0]][n[1]].number:
+                        # print("Bad priority color ", cell.color, " more prior than neighbor ", self.content[n[0]][n[1]].color)
+                        return False
+                elif self.colors.index(cell.color) > self.colors.index(self.content[n[0]][n[1]].color):
+                    if cell.number > self.content[n[0]][n[1]].number:
+                        # print("Bad priority color ", cell.color, " less prior than neighbor ", self.content[n[0]][n[1]].color)
+                        return False
 
 
         return True
