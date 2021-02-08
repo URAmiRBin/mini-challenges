@@ -6,81 +6,97 @@ class Table:
         self.colors = colors
         self.size = len(input_string)
         self.content = []
+        self.domains = [[[] for x in range(self.size)] for y in range(self.size)]
         for i in range(self.size):
             self.content.append([])
             for j in range(self.size):
                 self.content[i].append(Cell(input_string[i][j][0], input_string[i][j][1]))
 
-    def mrv(self):
-        result = np.zeros((self.size, self.size))
         for i in range(self.size):
             for j in range(self.size):
                 if self.content[i][j].isFilled():
-                    result[i, j] = 10000
+                    self.domains[i][j] = -1
                 elif self.content[i][j].hasOnlyColor():
                     for n in range(1, self.size + 1):
                         if self.isValid(i, j, Cell(str(n), self.content[i][j].color)):
-                            result[i, j] += 1
+                            self.domains[i][j].append(Cell(str(n), self.content[i][j].color))
                 elif self.content[i][j].hasOnlyNumber():
                     for c in self.colors:
                         if self.isValid(i, j, Cell(self.content[i][j].number, c)):
-                            result[i, j] += 1
+                            self.domains[i][j].append(Cell(self.content[i][j].number, c))
                 else:
                     for n in range(1, self.size + 1):
                         for c in self.colors:
                             if self.isValid(i, j, Cell(str(n), c)):
-                                result[i, j] += 1
+                                self.domains[i][j].append(Cell(str(n), c))
         
-        return np.argwhere(result == np.min(result))[0]
+    
+    def mrv(self):
+        min_index = [0, 0]
+        min_val = 10000
+        remaining_values = [[0 for x in range(self.size)] for y in range(self.size)]
+        for i in range(len(self.domains)):
+            for j in range(len(self.domains[i])):
+                if self.domains[i][j] == -1:
+                    remaining_values[i][j] = 1000
+                else:
+                    remaining_values[i][j] = len(self.domains[i][j])
+                if remaining_values[i][j] < min_val:
+                    if remaining_values[i][j] == 0:
+                        return [-1, -1]
+                    min_val = remaining_values[i][j]
+                    min_index[0] = i
+                    min_index[1] = j
+        return min_index
 
+    def updateDomains(self,x , y, cell):
+        self.domains[x][y] = -1
+        for i in range(self.size):
+            if self.domains[i][y] == -1:
+                continue
+            else:
+                for domain in self.domains[i][y]:
+                    if not self.isValid(i, y, domain):
+                        self.domains[i][y].remove(domain)
+        
+        for j in range(self.size):
+            if self.domains[x][j] == -1:
+                continue
+            else:
+                for domain in self.domains[x][j]:
+                    if not self.isValid(x, j, domain):
+                        self.domains[x][j].remove(domain)
+
+        for i in range(self.size):
+            for j in range(self.size):
+                if self.domains[i][j] == -1:
+                    continue
+                if len(self.domains[i][j]) == 0:
+                    return False
+        
+        return True
+    
     def solve(self):
         next = self.mrv()
         
         if self.content[next[0]][next[1]].isFilled():
             return True
         
-        if self.content[next[0]][next[1]].hasOnlyColor():
-            for n in range(1, self.size + 1):
-                if self.isValid(next[0], next[1], Cell(str(n), self.content[next[0]][next[1]].color)):
-                    self.content[next[0]][next[1]].number = str(n)
+        original_cell = self.content[next[0]][next[1]]
+        original_domains = self.domains
 
-                    # TODO: Forward check here
+        for domain in self.domains[next[0]][next[1]]:
+            if self.isValid(next[0], next[1], domain):
+                self.content[next[0]][next[1]] = domain
+                res = self.updateDomains(next[0], next[1], domain)
 
-                    if self.solve():
-                        return True
-                    else:
-                        self.content[next[0]][next[1]].number = "*"
-        elif self.content[next[0]][next[1]].hasOnlyNumber():
-            for c in self.colors:
-                if self.isValid(next[0], next[1], Cell(self.content[next[0]][next[1]].number, c)):
-                    self.content[next[0]][next[1]].color = c
-
-                    # TODO: Forward check here
-
-                    if self.solve():
-                        return True
-                    else:
-                        self.content[next[0]][next[1]].color = "#"
-        else:
-            for c in self.colors:
-                for n in range(1, self.size + 1):
-                    if self.isValid(next[0], next[1], Cell(str(n), c)):
-                        self.content[next[0]][next[1]].color = c
-                        self.content[next[0]][next[1]].number = str(n)
-
-                        # TODO: Forward check here
-
-                        if self.solve():
-                            return True
-                        else:
-                            self.content[next[0]][next[1]].color = "#"
-                            self.content[next[0]][next[1]].number = "*"
-
+                if self.solve() and res:
+                    return True
+                else:
+                    self.content[next[0]][next[1]] = original_cell
+                    self.domains = original_domains
         
-
-        return False
-                    
-        
+        return False        
 
     def isSolved(self):
         for row in self.content:
@@ -171,9 +187,11 @@ def read_input():
 
     return colors, table
 
-
 colors, tableList = read_input()
 table = Table(tableList, colors)
 
-table.solve()
-table.display()
+result = table.solve()
+if result:
+    table.display()
+else:
+    print("Could not find the answer")
