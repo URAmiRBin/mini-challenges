@@ -31,14 +31,15 @@ class Table:
                         if self.isValid(i, j, Cell(str(n), self.content[i][j].color)):
                             self.domains[i][j].append(Cell(str(n), self.content[i][j].color))
                 elif self.content[i][j].hasOnlyNumber():
-                    for c in self.colors:
+                    for c in self.colors[::-1]:
                         if self.isValid(i, j, Cell(self.content[i][j].number, c)):
                             self.domains[i][j].append(Cell(self.content[i][j].number, c))
                 else:
                     for n in range(1, self.size + 1):
-                        for c in self.colors:
+                        for c in self.colors[::-1]:
                             if self.isValid(i, j, Cell(str(n), c)):
                                 self.domains[i][j].append(Cell(str(n), c))
+        
         
     
     def mrv(self):
@@ -75,18 +76,14 @@ class Table:
             if self.domains[i][y] == -1:
                 continue
             else:
-                for domain in self.domains[i][y]:
-                    if not self.isValid(i, y, domain):
-                        self.domains[i][y].remove(domain)
+                self.domains[i][y] = [c for c in self.domains[i][y] if self.isValid(i, y, c)]
         
         # Update domain values for this row
         for j in range(self.size):
             if self.domains[x][j] == -1:
                 continue
             else:
-                for domain in self.domains[x][j]:
-                    if not self.isValid(x, j, domain):
-                        self.domains[x][j].remove(domain)
+                self.domains[x][j] = [c for c in self.domains[x][j] if self.isValid(x, j, c)]
 
         # Check if any cell has domain values to work with
         for i in range(self.size):
@@ -111,24 +108,25 @@ class Table:
             return True
         
         # Save a backup in the case of need
-        original_cell = self.content[next[0]][next[1]]
-        original_domains = self.domains
-
+        backup_cell = self.content[next[0]][next[1]]
+        backup_domains = [d[:] for d in self.domains]
+        
         # Set all valid values and backtracks using recursion
         for domain in self.domains[next[0]][next[1]]:
             # Set valid domain
             self.content[next[0]][next[1]] = domain
+
             # Forward check to see if this change locks the problem or not
             # Update domains according to this change
             res = self.updateDomains(next[0], next[1], domain)
 
             # proceed to solve the problem
-            if self.solve() and res:
+            if res and self.isValid(next[0], next[1], domain) and self.solve():
                 return True
             # backtrack if not successful
             else:
-                self.content[next[0]][next[1]] = original_cell
-                self.domains = original_domains
+                self.content[next[0]][next[1]] = backup_cell
+                self.domains = backup_domains
         
         return False        
 
@@ -160,11 +158,9 @@ class Table:
             if self.content[n[0]][n[1]].isFilled():
                 if self.colors.index(cell.color) < self.colors.index(self.content[n[0]][n[1]].color):
                     if cell.number < self.content[n[0]][n[1]].number:
-                        # print("Bad priority color ", cell.color, " more prior than neighbor ", self.content[n[0]][n[1]].color)
                         return False
                 elif self.colors.index(cell.color) > self.colors.index(self.content[n[0]][n[1]].color):
                     if cell.number > self.content[n[0]][n[1]].number:
-                        # print("Bad priority color ", cell.color, " less prior than neighbor ", self.content[n[0]][n[1]].color)
                         return False
 
 
@@ -184,7 +180,10 @@ class Table:
 
     def display(self):
         for row in self.content:
-            print(row[0].display(),"   ",row[1].display(),"   ",row[2].display(),"   ")
+            line = ""
+            for cell in row:
+                line += cell.display() + "  " 
+            print(line)
 
 
 class Cell:
@@ -225,7 +224,7 @@ def read_input():
     colorCount, dim = input().split(" ")
     colors = input().split(" ")
     
-    if str(colorCount) != len(colors):
+    if int(colorCount) != len(colors):
         print("Enter the input right!")
         return
 
