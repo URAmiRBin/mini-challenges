@@ -4,7 +4,7 @@ from model import pairwise
 LAMBDA1 = 0.66
 LAMBDA2 = 0.33
 LAMBDA3 = 0.01
-EPSILON = 0.01
+EPSILON = 0.00001
 
 def build_test_set(address):
     f = io.open(address, mode="rt", encoding="utf-8")
@@ -23,7 +23,7 @@ def compute_uni_ps(test, models):
             try:
                 ps[-1] *= model[word]
             except:
-                ps[-1] *= 0.001
+                ps[-1] *= EPSILON
     return ps
 
 def compute_bi_ps(test, models):
@@ -48,7 +48,6 @@ def determine_poet(tests, models):
         start_symbol = "<s>"
         tests = [[start_symbol] + test for test in tests]
         tests = pairwise(tests)
-    print(tests[0])
     result = []
     for test in tests:
         if isBi:
