@@ -1,5 +1,5 @@
 from model import get_uni_models, get_bi_models
-from test import evaluate
+from evaluate import evaluate
 
 # Build models
 files = ["ferdowsi_train.txt", "hafez_train.txt", "molavi_train.txt"]
