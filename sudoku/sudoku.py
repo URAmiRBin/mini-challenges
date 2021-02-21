@@ -234,6 +234,19 @@ def read_input():
 
     return colors, table
 
+def read_file(address):
+    with open(address, 'r') as f:
+        l = f.read().split()
+    colorCount, dim = l[0], l[1]
+    colors = l[2:2 + int(colorCount)]
+
+    tableList = l[2 + int(colorCount):]
+
+    table = [tableList[i * int(dim): (i + 1) * int(dim)] for i in range(int(dim))]
+    
+    return colors, table
+        
+
 """
 This solves a specific problem
 which is the result of an intercourse between sudoku and map-coloring problem
@@ -254,8 +267,12 @@ r g b y p
 *g 1# *#
 """
 
-# Read inputs
-colors, tableList = read_input()
+import sys
+if len(sys.argv) == 1:
+    # Read inputs
+    colors, tableList = read_input()
+else:
+    colors, tableList = read_file(sys.argv[1])
 # Generate table using given input
 table = Table(tableList, colors)
 
